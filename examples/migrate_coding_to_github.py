@@ -13,8 +13,25 @@ import subprocess
 
 from quanttide_devops.config import settings
 
-
 g = Github(settings.GITHUB_ACCESS_TOKEN)
+
+
+def sync_repo():
+    """
+    Sync repository from Coding DevOps to GitHub
+    :return:
+    """
+    # 临时仓库
+    tmp_dir = tempfile.TemporaryDirectory()
+    # Clone from Coding
+    coding_remote_url = f'https://{coding_settings.AUTH_USERNAME}:{coding_settings.AUTH_TOKEN}@e.coding.net/{coding_settings.TEAM}/{coding_settings.DEFAULT_PROJECT_NAME}/{coding_settings.DEFAULT_DEPOT_NAME}.git'
+    repo = Repo.clone_from(coding_remote_url, tmp_dir.name)
+    # Add GitHub remote
+    github_remote_url = f'https://github.com/quanttide/{settings.GITHUB_DEFAULT_REPO_NAME}.git'
+    github = repo.create_remote('github', github_remote_url)
+    # Push to GitHub
+    github.push()
+    tmp_dir.cleanup()
 
 
 def sync_releases():
@@ -23,18 +40,14 @@ def sync_releases():
     :return:
     """
     # Coding
-    coding_releases = coding_openapi_client.describe_git_releases(
-        depot_id=coding_openapi_client.get_depot_id_by_name(depot_name=coding_settings.DEFAULT_DEPOT_NAME,
-                                                            project_name=coding_settings.DEFAULT_PROJECT_NAME),
-        PageSize=100,
-    )
+    coding_depot_id = coding_settings.DEFAULT_DEPOT_ID
+    coding_releases = coding_openapi_client.describe_git_releases(depot_id=coding_depot_id, PageSize=100, )
     coding_releases = sorted(coding_releases, key=lambda x: semantic_version.Version(x['TagName']))
     # GitHub
     # Note: suppose the repo name is same.
-    repo = g.get_repo(f"{settings.GITHUB_ORGANIZATION}/{coding_settings.DEFAULT_DEPOT_NAME}")
+    repo = g.get_repo(f"{settings.GITHUB_ORGANIZATION}/{settings.GITHUB_DEFAULT_REPO_NAME}")
     for release in coding_releases:
-        repo.create_git_release(release['TagName'], release['Title'], release['Body'],
-                                prerelease=release['Pre'])
+        repo.create_git_release(release['TagName'], release['Title'], release['Body'], prerelease=release['Pre'])
     return coding_releases
 
 
@@ -44,24 +57,23 @@ def publish_to_pypi():
     :return:
     """
     coding_releases = coding_openapi_client.describe_git_releases(
-        depot_id=coding_openapi_client.get_depot_id_by_name(depot_name=coding_settings.DEFAULT_DEPOT_NAME,
-                                                            project_name=coding_settings.DEFAULT_PROJECT_NAME),
-        PageSize=100,
-    )
+        depot_id=coding_settings.DEFAULT_DEPOT_ID,
+        PageSize=100, )
     coding_releases = sorted(coding_releases, key=lambda x: semantic_version.Version(x['TagName']))
 
     # 发布
     for release in coding_releases:
         # 检出版本
         version = release['TagName']
-        if semantic_version.Version(version) < semantic_version.Version(settings.MIN_VERSION):
-            continue
+        # if semantic_version.Version(version) < semantic_version.Version(settings.MIN_VERSION):
+        #     continue
         print(f"开始发布v{version}")
         # 本地仓库
         tmp_dir = tempfile.TemporaryDirectory()
         os.chdir(tmp_dir.name)
-        local_repo = Repo(settings.REPO_LOCAL_PATH).clone(path=tmp_dir.name)
-        local_repo.git.checkout(version)
+        remote_url = f'https://{coding_settings.AUTH_USERNAME}:{coding_settings.AUTH_TOKEN}@e.coding.net/{coding_settings.TEAM}/{coding_settings.DEFAULT_PROJECT_NAME}/{coding_settings.DEFAULT_DEPOT_NAME}.git'
+        repo = Repo.clone_from(remote_url, tmp_dir.name)
+        repo.git.checkout(version)
         # 上传
         status = subprocess.run(['python3', '-m', 'build'])
         if status.returncode:
@@ -75,6 +87,7 @@ def publish_to_pypi():
 
 
 def main():
+    # sync_repo()
     # sync_releases()
     publish_to_pypi()
 
