@@ -11,7 +11,7 @@ from git import Repo
 import tempfile
 import subprocess
 
-from devops_sdk.config import settings
+from quanttide_devops.config import settings
 
 
 g = Github(settings.GITHUB_ACCESS_TOKEN)

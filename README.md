@@ -1,3 +1,3 @@
-# `devops-sdk-py`
+# `quanttide-devops-python`
 
-Python SDK for DevOps platforms.
+Python SDK for Specification of QuantTide DevOps
