@@ -1,6 +1,6 @@
 # `quanttide-devops-python`
 
-Python SDK for Specification of QuantTide DevOps
+Python SDK for QuantTide Specification of DevOps
 
 
 ## Installation
