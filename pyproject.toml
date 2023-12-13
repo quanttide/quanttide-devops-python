@@ -18,3 +18,6 @@ pygithub = "^2.1.1"
 coding-devops-sdk-py = "^0.1.2"
 pydantic = "^2.5.2"
 typer = "^0.9.0"
+
+[tool.poetry.scripts]
+qtdevops = "quanttide_devops.cli:app"
