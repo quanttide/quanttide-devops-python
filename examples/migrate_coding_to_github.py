@@ -12,26 +12,19 @@ import tempfile
 import subprocess
 
 from quanttide_devops.config import settings
+from quanttide_devops.repositories.repo import sync_repo
 
 g = Github(settings.GITHUB_ACCESS_TOKEN)
 
 
-def sync_repo():
+def sync_repo_from_coding_to_github():
     """
     Sync repository from Coding DevOps to GitHub
     :return:
     """
-    # 临时仓库
-    tmp_dir = tempfile.TemporaryDirectory()
-    # Clone from Coding
     coding_remote_url = f'https://{coding_settings.AUTH_USERNAME}:{coding_settings.AUTH_TOKEN}@e.coding.net/{coding_settings.TEAM}/{coding_settings.DEFAULT_PROJECT_NAME}/{coding_settings.DEFAULT_DEPOT_NAME}.git'
-    repo = Repo.clone_from(coding_remote_url, tmp_dir.name)
-    # Add GitHub remote
     github_remote_url = f'https://github.com/quanttide/{settings.GITHUB_DEFAULT_REPO_NAME}.git'
-    github = repo.create_remote('github', github_remote_url)
-    # Push to GitHub
-    github.push()
-    tmp_dir.cleanup()
+    sync_repo(coding_remote_url, github_remote_url)
 
 
 def sync_releases():
@@ -87,9 +80,9 @@ def publish_to_pypi():
 
 
 def main():
-    # sync_repo()
+    sync_repo_from_coding_to_github()
     # sync_releases()
-    publish_to_pypi()
+    # publish_to_pypi()
 
 
 if __name__ == "__main__":
