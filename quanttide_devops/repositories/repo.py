@@ -3,10 +3,16 @@ Git repository with multiple providers support
 """
 import tempfile
 
+from pydantic import BaseModel
 from git import Repo
 import typer
 
 app = typer.Typer()
+
+
+class GitRepo(BaseModel):
+    remote_url: str
+    provider: str
 
 
 @app.command('sync')

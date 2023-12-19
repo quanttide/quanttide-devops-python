@@ -33,8 +33,11 @@ def sync_releases():
     :return:
     """
     # Coding
-    coding_depot_id = coding_settings.DEFAULT_DEPOT_ID
-    coding_releases = coding_openapi_client.describe_git_releases(depot_id=coding_depot_id, PageSize=100, )
+    # coding_depot_id = coding_settings.DEFAULT_DEPOT_ID
+    coding_releases = coding_openapi_client.describe_git_releases_by_name(
+        depot_name=coding_settings.DEFAULT_DEPOT_NAME,
+        PageSize=100,
+    )
     coding_releases = sorted(coding_releases, key=lambda x: semantic_version.Version(x['TagName']))
     # GitHub
     # Note: suppose the repo name is same.
@@ -49,8 +52,8 @@ def publish_to_pypi():
 
     :return:
     """
-    coding_releases = coding_openapi_client.describe_git_releases(
-        depot_id=coding_settings.DEFAULT_DEPOT_ID,
+    coding_releases = coding_openapi_client.describe_git_releases_by_name(
+        depot_name=coding_settings.DEFAULT_DEPOT_NAME,
         PageSize=100, )
     coding_releases = sorted(coding_releases, key=lambda x: semantic_version.Version(x['TagName']))
 
@@ -80,8 +83,8 @@ def publish_to_pypi():
 
 
 def main():
-    sync_repo_from_coding_to_github()
-    # sync_releases()
+    # sync_repo_from_coding_to_github()
+    sync_releases()
     # publish_to_pypi()
 
 
